@@ -1,5 +1,5 @@
 +++
-title = "Give your AI agent a better web fetch capability for free*"
+title = "A better web fetch for your AI agent, for free*"
 date = 2026-09-09
 description = "Claude's built-in web fetch bows to robots.txt and can't run JavaScript. A self-hosted Playwright MCP server behind a free Cloudflare MCP portal fixes both."
 
