@@ -58,15 +58,19 @@ deploy on `push` to `main` only; never add `pull_request_target`.
 ## One-time setup
 
 1. Create a Cloudflare API token for this site only (Cloudflare dashboard >
-   My Profile > API Tokens > Create Token, start from **Edit Cloudflare
-   Workers** and trim it):
+   My Profile > API Tokens > Create Token > Create Custom Token):
    - Account > **Workers Scripts: Edit**
-   - Zone (dinculescu.dev only) > **Workers Routes: Edit**
-   - Zone (dinculescu.dev only) > **DNS: Edit**
+   - Account > **Account Settings: Read**
+   - User > **User Details: Read**
+   - User > **Memberships: Read**
+   - Account Resources: only this account. Zone Resources: none.
 
-   If the custom-domain step fails with a permission error, add Zone >
-   **SSL and Certificates: Edit**. Do not reuse the home-lab token; it has far
-   more rights than a blog needs.
+   Workers Scripts is the only edit right: it uploads the assets and, because
+   `custom_domain = true` uses the account-level Workers domains API, it also
+   creates the custom domain, its DNS record and its certificate. No DNS,
+   Workers Routes or SSL permission is needed. The three read rights are what
+   wrangler uses to verify the token and resolve the account. Do not reuse the
+   home-lab token; it has far more rights than a blog needs.
 2. Add repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
    (Settings > Secrets and variables > Actions).
 3. Install the [giscus GitHub app](https://github.com/apps/giscus) on this
