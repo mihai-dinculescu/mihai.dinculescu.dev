@@ -1,0 +1,60 @@
+{#
+  Overrides the theme's placeholder (which points at utterances). Included by
+  the theme's base.html on any page whose front matter sets
+  `[extra] comment = true`, right after the <div class="giscus"> mount point.
+  Settings live under [extra.giscus] in config.toml.
+#}
+{% set giscus = config.extra.giscus %}
+<script>
+  (function () {
+    // The theme toggles dark mode by enabling/disabling the #darkModeStyle
+    // stylesheet, so that is the source of truth for which giscus theme to use.
+    function giscusTheme() {
+      var dark = document.getElementById("darkModeStyle");
+      var useDark = dark
+        ? !dark.disabled
+        : window.matchMedia("(prefers-color-scheme: dark)").matches;
+      return useDark ? "dark" : "light";
+    }
+
+    var script = document.createElement("script");
+    script.src = "https://giscus.app/client.js";
+    script.async = true;
+    script.crossOrigin = "anonymous";
+    var attrs = {
+      "data-repo": "{{ giscus.repo }}",
+      "data-repo-id": "{{ giscus.repo_id }}",
+      "data-category": "{{ giscus.category }}",
+      "data-category-id": "{{ giscus.category_id }}",
+      "data-mapping": "pathname",
+      "data-strict": "1",
+      "data-reactions-enabled": "1",
+      "data-emit-metadata": "0",
+      "data-input-position": "top",
+      "data-theme": giscusTheme(),
+      "data-lang": "en",
+      "data-loading": "lazy",
+    };
+    Object.keys(attrs).forEach(function (name) {
+      script.setAttribute(name, attrs[name]);
+    });
+    document.querySelector(".giscus").appendChild(script);
+
+    // Keep the embedded comments in step with the theme toggle. The theme's
+    // themetoggle.js declares updateItemToggleTheme as a global and calls it
+    // after every toggle and system preference change, so wrap it.
+    if (typeof updateItemToggleTheme === "function") {
+      var original = updateItemToggleTheme;
+      updateItemToggleTheme = function () {
+        original.apply(this, arguments);
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (frame) {
+          frame.contentWindow.postMessage(
+            { giscus: { setConfig: { theme: giscusTheme() } } },
+            "https://giscus.app"
+          );
+        }
+      };
+    }
+  })();
+</script>

@@ -1,0 +1,16 @@
+// Deploys the Zola build output as an assets-only Worker (no script) on the
+// custom domain. Wrangler creates the DNS record and certificate for the
+// custom domain on first deploy, so the hostname must not already have a DNS
+// record (terraform manages the tunnel hostnames; keep this one out of there).
+{
+  "name": "mihai-dinculescu-dev",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "mihai.dinculescu.dev", "custom_domain": true }],
+  "assets": {
+    "directory": "./public",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}

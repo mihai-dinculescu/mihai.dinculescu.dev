@@ -1,0 +1,57 @@
+# Personal site at https://mihai.dinculescu.dev, built with Zola and the
+# apollo theme (git submodule under themes/apollo). Deployed as a Cloudflare
+# Worker with static assets by .github/workflows/deploy.yml; see README.md.
+base_url = "https://mihai.dinculescu.dev"
+title = "Mihai Dinculescu"
+description = "Notes on software, home labs and whatever else I'm tinkering with."
+theme = "apollo"
+
+compile_sass = true
+minify_html = true
+build_search_index = true
+generate_feeds = true
+taxonomies = [{ name = "tags", feed = true }]
+
+[search]
+include_title = true
+include_description = true
+include_path = true
+include_content = true
+index_format = "elasticlunr_json"
+
+[markdown.highlighting]
+style = "class"
+light_theme = "github-light"
+dark_theme = "github-dark"
+error_on_missing_language = true
+
+[extra]
+toc = true
+use_cdn = false
+theme = "toggle-auto" # light, dark, auto, toggle, toggle-auto
+fancy_code = true
+dynamic_note = true
+mathjax = false
+# "Source Code" link on every post, pointing at the file in this repository.
+repo_view = true
+repo_url = "https://github.com/mihai-dinculescu/mihai.dinculescu.dev/tree/main/content/"
+menu = [
+  { name = "/posts", url = "/posts", weight = 1 },
+  { name = "/tags", url = "/tags", weight = 2 },
+]
+socials = [
+  { name = "github", url = "https://github.com/mihai-dinculescu", icon = "github" },
+]
+
+# Comments are this repository's GitHub Discussions, rendered by giscus
+# (templates/_giscus_script.html). Posts opt in with `comment = true` under
+# their [extra] front matter. The IDs come from the GitHub GraphQL API; see
+# README.md for how to look them up again.
+[extra.giscus]
+repo = "mihai-dinculescu/mihai.dinculescu.dev"
+repo_id = "R_kgDOUTzdSw"
+category = "Announcements"
+category_id = "DIC_kwDOUTzdS84DFPd3"
+
+[extra.analytics]
+enabled = false
