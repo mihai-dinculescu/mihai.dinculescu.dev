@@ -63,14 +63,21 @@ deploy on `push` to `main` only; never add `pull_request_target`.
    - Account > **Account Settings: Read**
    - User > **User Details: Read**
    - User > **Memberships: Read**
-   - Account Resources: only this account. Zone Resources: none.
+   - Zone > **Zone: Read**
+   - Zone > **Workers Routes: Read**
+   - Account Resources: only this account. Zone Resources: only
+     `dinculescu.dev`.
 
-   Workers Scripts is the only edit right: it uploads the assets and, because
-   `custom_domain = true` uses the account-level Workers domains API, it also
-   creates the custom domain, its DNS record and its certificate. No DNS,
-   Workers Routes or SSL permission is needed. The three read rights are what
-   wrangler uses to verify the token and resolve the account. Do not reuse the
-   home-lab token; it has far more rights than a blog needs.
+   Workers Scripts uploads the assets and, because `custom_domain = true` uses
+   the account-level Workers domains API, also creates the custom domain, its
+   DNS record and its certificate. No DNS or SSL permission is needed. The
+   zone rights are for wrangler's pre-deploy checks: it resolves the zone for
+   the hostname and lists the zone's Worker routes to detect conflicts, and
+   fails with `Authentication error [code: 10000]` on
+   `/zones/<id>/workers/routes` without them. The read rights on the account
+   and user are what wrangler uses to verify the token and resolve the
+   account. Do not reuse the home-lab token; it has far more rights than a
+   blog needs.
 2. Add repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
    (Settings > Secrets and variables > Actions).
 3. Install the [giscus GitHub app](https://github.com/apps/giscus) on this
