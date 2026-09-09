@@ -1,5 +1,5 @@
 +++
-title = "Give your AI agent a better web fetch capability for free"
+title = "Give your AI agent a better web fetch capability for free*"
 date = 2026-09-09
 description = "Claude's built-in web fetch bows to robots.txt and can't run JavaScript. A self-hosted Playwright MCP server behind a free Cloudflare MCP portal fixes both."
 
@@ -145,3 +145,6 @@ The difference is that pages which used to return nothing now return their
 content. Given that the whole thing costs nothing beyond electricity for a Pi
 that was already plugged in, I'd say the watch firmware was the most
 productive boring update I've ever installed.
+
+\* Free as in you already own something to run it on and don't count the
+electricity.
