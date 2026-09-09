@@ -1,8 +1,6 @@
 +++
-template = "homepage.html"
+sort_by = "date"
+paginate_by = 10
 +++
 
-Hi, I'm Mihai. I write software for a living and run a small Kubernetes
-cluster at home for everything else. This is where I keep notes on both.
-
-Start with the [posts](/posts) or browse by [tag](/tags).
+I write software for a living and run a small Kubernetes cluster at home for everything else; these are my notes on both.
