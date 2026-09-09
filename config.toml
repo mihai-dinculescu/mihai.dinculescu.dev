@@ -41,6 +41,7 @@ menu = [
 ]
 socials = [
   { name = "github", url = "https://github.com/mihai-dinculescu", icon = "github" },
+  { name = "linkedin", url = "https://www.linkedin.com/in/mihai-dinculescu/", icon = "linkedin" },
 ]
 
 # Comments are this repository's GitHub Discussions, rendered by giscus
