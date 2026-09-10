@@ -11,6 +11,7 @@ Discussions, rendered by [giscus](https://giscus.app).
 | Theme          | `themes/apollo` git submodule, pinned to the commit recorded in this repo      |
 | Site config    | `config.toml`                                                                  |
 | Comments embed | `templates/_giscus_script.html` (overrides the theme's utterances placeholder) |
+| Components     | `templates/components/` (Tera 2 components callable from post markdown)        |
 | Worker config  | `wrangler.jsonc`                                                               |
 | Deploy         | `.github/workflows/deploy.yml`, on every push to `main`                        |
 
@@ -35,6 +36,14 @@ tags = ["tag"]
 [extra]
 comment = true   # omit to publish without a comment thread
 +++
+```
+
+Posts whose English was polished by AI end with the disclaimer component,
+defined in `templates/components/ai_disclaimer.html`. Put this on its own
+line, just before any title footnote:
+
+```
+{{<ai_disclaimer />}}
 ```
 
 `zola check` validates internal and external links before pushing.

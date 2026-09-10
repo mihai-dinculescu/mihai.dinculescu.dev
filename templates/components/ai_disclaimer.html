@@ -1,0 +1,14 @@
+{#
+  Closing section for posts whose English was polished by AI.
+  Invoke from markdown with {{<ai_disclaimer />}}. The body is markdown:
+  components run before the markdown pass, so keep it un-indented.
+#}
+{% component ai_disclaimer() %}
+## AI usage disclaimer
+
+English is not my first language, and I'm not a talented writer in any
+language, so I use AI to polish my writing. The ideas, the setup, the mistakes
+and the opinions are all mine. They reach the AI as thorough notes in
+half-broken English, and it fixes the English. It doesn't supply the thinking,
+though it is a trusty research assistant.
+{% endcomponent ai_disclaimer %}
