@@ -1,0 +1,8 @@
+{#
+  Overrides the theme's empty hook at the end of <head>. Posts republished
+  from elsewhere set `canonical_url` under [extra] so search engines credit
+  the original instead of treating this copy as a duplicate.
+#}
+{% if page?.extra?.canonical_url %}
+    <link rel="canonical" href="{{ page.extra.canonical_url }}" />
+{% endif %}

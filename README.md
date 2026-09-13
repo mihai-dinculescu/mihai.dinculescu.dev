@@ -11,6 +11,7 @@ Discussions, rendered by [giscus](https://giscus.app).
 | Theme          | `themes/apollo` git submodule, pinned to the commit recorded in this repo      |
 | Site config    | `config.toml`                                                                  |
 | Comments embed | `templates/_giscus_script.html` (overrides the theme's utterances placeholder) |
+| Head hook      | `templates/apollo/head_end.html` (canonical link for republished posts)        |
 | Components     | `templates/components/` (Tera 2 components callable from post markdown)        |
 | Worker config  | `wrangler.jsonc`                                                               |
 | Deploy         | `.github/workflows/deploy.yml`, on every push to `main`                        |
@@ -37,6 +38,10 @@ tags = ["tag"]
 comment = true   # omit to publish without a comment thread
 +++
 ```
+
+A post republished from elsewhere also sets `canonical_url` under `[extra]` to
+the original's address. `templates/apollo/head_end.html` turns it into a
+`<link rel="canonical">` so search engines credit the original.
 
 Posts whose English was polished by AI end with the disclaimer component,
 defined in `templates/components/ai_disclaimer.html`. Put this on its own

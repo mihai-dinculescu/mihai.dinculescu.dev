@@ -26,6 +26,20 @@ light_theme = "github-light"
 dark_theme = "github-dark"
 error_on_missing_language = true
 
+# `zola check` false positives, listed per URL so everything else is still
+# checked. Medium answers 403 to anything that isn't a browser. GitHub renders
+# README heading ids as `user-content-<slug>` and maps `#<slug>` to them with
+# JavaScript, so anchors on GitHub pages can't be verified.
+[link_checker]
+skip_prefixes = [
+  # posts/esp32-mqtt-publish-with-rust.md
+  "https://medium.com/iotics/esp32-mqtt-publish-with-rust-678d1068ee2",
+]
+skip_anchor_prefixes = [
+  # posts/esp32-mqtt-publish-with-rust.md
+  "https://github.com/ivmarkov/rust-esp32-std-demo",
+]
+
 [extra]
 toc = true
 use_cdn = false
