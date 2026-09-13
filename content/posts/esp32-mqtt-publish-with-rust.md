@@ -519,3 +519,5 @@ on an ESP32 microcontroller. It's possible, and it works pretty well!
 In a real-life use case, you would probably want to create yourself an MQTT
 Client wrapper, which you'll then hopefully publish to
 [crates.io](https://crates.io/) so that we can all benefit ❤
+
+{{<ai_disclaimer />}}
