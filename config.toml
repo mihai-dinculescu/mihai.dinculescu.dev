@@ -4,6 +4,7 @@
 base_url = "https://mihai.dinculescu.dev"
 title = "Mihai Dinculescu"
 description = "Notes on software, home labs and whatever else I'm tinkering with."
+author = "Mihai Dinculescu"
 theme = "apollo"
 
 compile_sass = true
@@ -38,6 +39,7 @@ repo_url = "https://github.com/mihai-dinculescu/mihai.dinculescu.dev/tree/main/c
 menu = [
   { name = "/posts", url = "/posts", weight = 1 },
   { name = "/tags", url = "/tags", weight = 2 },
+  { name = "/feed", url = "/atom.xml", weight = 3 },
 ]
 socials = [
   { name = "github", url = "https://github.com/mihai-dinculescu", icon = "github" },
