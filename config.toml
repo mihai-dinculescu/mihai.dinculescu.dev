@@ -43,6 +43,7 @@ menu = [
 ]
 socials = [
   { name = "github", url = "https://github.com/mihai-dinculescu", icon = "github" },
+  { name = "stackoverflow", url = "https://stackoverflow.com/users/4304188/mihai-dinculescu", icon = "stack-overflow" },
   { name = "linkedin", url = "https://www.linkedin.com/in/mihai-dinculescu/", icon = "linkedin" },
 ]
 
