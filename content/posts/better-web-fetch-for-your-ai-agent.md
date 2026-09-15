@@ -8,6 +8,7 @@ tags = ["ai", "mcp", "claude", "playwright", "cloudflare", "kubernetes"]
 
 [extra]
 comment = true
+read_time = true
 +++
 
 ## Why this suddenly became important to me

@@ -8,6 +8,7 @@ tags = ["rust", "esp32", "mqtt", "embedded"]
 
 [extra]
 comment = true
+read_time = true
 canonical_url = "https://medium.com/iotics/esp32-mqtt-publish-with-rust-678d1068ee2"
 +++
 

@@ -8,6 +8,7 @@ tags = ["ai", "agents", "leadership", "engineering-management"]
 
 [extra]
 comment = true
+read_time = true
 +++
 
 _A talented engineer with agents now ships more than a hundred of them._

@@ -36,6 +36,7 @@ tags = ["tag"]
 
 [extra]
 comment = true   # omit to publish without a comment thread
+read_time = true # show the estimated reading time in the post header
 +++
 ```
 
