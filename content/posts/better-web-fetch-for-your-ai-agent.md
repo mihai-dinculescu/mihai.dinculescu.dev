@@ -4,7 +4,7 @@ date = 2026-09-09
 description = "Claude's built-in web fetch bows to robots.txt and can't run JavaScript. A self-hosted Playwright MCP server behind a free Cloudflare MCP portal fixes both."
 
 [taxonomies]
-tags = ["ai", "mcp", "claude", "playwright", "cloudflare", "kubernetes"]
+tags = ["ai", "agents", "mcp", "claude", "playwright", "cloudflare", "kubernetes", "robots-txt"]
 
 [extra]
 comment = true
