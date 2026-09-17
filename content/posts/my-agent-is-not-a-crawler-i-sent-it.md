@@ -1,5 +1,5 @@
 +++
-title = "My agent is not a crawler. I sent it."
+title = "My agent is not a crawler, I sent it"
 date = 2026-09-17
 description = "robots.txt was written for crawlers that traverse the web unattended, not for an agent fetching one page because a human asked. Cloudflare's new Search, Training and Agent controls finally let site owners say which one they mean."
 
