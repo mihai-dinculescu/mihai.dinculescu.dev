@@ -1,0 +1,45 @@
+{# View counter beacon, posts only. The Worker in worker/index.js records it and
+   README.md describes what is counted ("View counts") and how the `data-views`
+   attribute, which scripts/posts-manifest.sh reads from every built page, tells
+   the Worker which paths to accept ("Deploy"). The script takes the path from
+   that attribute rather than location.pathname, so the manifest, the
+   sessionStorage key and the request always agree. The flag is set before
+   sending: a request lost in transit is not retried, but leaving the page
+   before the reply cannot count it twice. A reply that is not 2xx means the
+   view was not counted (429 over the cap, 503 without the manifest), so the
+   flag is cleared and the next load in the tab sends again; keepalive
+   completes a request the page leaves behind, so a reply that never arrives
+   cannot lead to a second send. Without sessionStorage there is no
+   way to count once per tab, so nothing is sent rather than counting every
+   reload. A prerendered page or a background tab may never be shown, so the
+   view is sent the first time it is; a hidden document can only become
+   visible, so the first visibilitychange is the right one, and activating a
+   prerender fires it too. Under `zola serve` there is no Worker, so the request
+   fails and is ignored. Explanations stay in this comment, which the build
+   strips; comments inside the script would be shipped with every page. #}
+{% if page and page.components and page.components[0] == "posts" %}
+<script data-views="{{ page.path }}">
+  (() => {
+    if (navigator.webdriver) return;
+    const path = document.currentScript.dataset.views;
+    const send = () => {
+      try {
+        if (sessionStorage.getItem("viewed:" + path)) return;
+        sessionStorage.setItem("viewed:" + path, "1");
+      } catch (_) {
+        return;
+      }
+      fetch("/api/views" + path, { method: "POST", keepalive: true })
+        .then((reply) => {
+          if (!reply.ok) sessionStorage.removeItem("viewed:" + path);
+        })
+        .catch(() => {});
+    };
+    if (document.visibilityState === "visible") {
+      send();
+    } else {
+      document.addEventListener("visibilitychange", send, { once: true });
+    }
+  })();
+</script>
+{% endif %}

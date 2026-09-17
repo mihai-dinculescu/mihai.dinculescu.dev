@@ -1,16 +1,50 @@
-// Deploys the Zola build output as an assets-only Worker (no script) on the
-// custom domain. Wrangler creates the DNS record and certificate for the
-// custom domain on first deploy, so the hostname must not already have a DNS
-// record (terraform manages the tunnel hostnames; keep this one out of there).
+// Deploys the Zola build output as a Worker with static assets on the custom
+// domain. README.md ("Deploy") describes how requests are routed between the
+// asset layer and worker/index.js. Wrangler creates the DNS record and
+// certificate for the custom domain on first deploy, so the hostname must not
+// already have a DNS record (terraform manages the tunnel hostnames; keep this
+// one out of there).
 {
   "name": "mihai-dinculescu-dev",
+  "main": "./worker/index.js",
   "compatibility_date": "2026-09-01",
   "workers_dev": false,
   "preview_urls": false,
   "routes": [{ "pattern": "mihai.dinculescu.dev", "custom_domain": true }],
   "assets": {
     "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "404-page"
-  }
+  },
+  // Post view counts; see README.md ("View counts" and "One-time setup").
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mihai-dinculescu-dev-views",
+      "database_id": "d0f1fcdf-5028-4793-b7a1-8b5130df89ca",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // Bounds how many views one client IP can record per minute. Without it a
+  // scripted client can poison a post's count and burn through D1's daily
+  // write quota, after which genuine views fail for the rest of the UTC day.
+  // Counted per Cloudflare location, not globally. `namespace_id` is scoped to
+  // the account, not the Worker: another Worker using the same id would share
+  // these buckets, so it must be unique across the account's Workers. This one
+  // is the CRC of the Worker name: `printf mihai-dinculescu-dev | cksum`.
+  "ratelimits": [
+    {
+      "name": "VIEWS_LIMIT",
+      "namespace_id": "2884002662",
+      "simple": { "limit": 10, "period": 60 }
+    }
+  ],
+  // Keeps the console.error from a failed D1 write, an unreachable rate limiter
+  // or an unreadable posts.txt (worker/index.js) in the Workers Logs dashboard;
+  // without this the log is discarded and a failing counter would be invisible.
+  // It also keeps an invocation log per /api/* request for the retention
+  // period, which README.md ("View counts") discloses.
+  "observability": { "enabled": true }
 }

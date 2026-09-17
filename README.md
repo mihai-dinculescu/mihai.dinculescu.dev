@@ -2,8 +2,9 @@
 
 Personal site built with [Zola](https://www.getzola.org) and the
 [apollo](https://github.com/not-matthias/apollo) theme, served as a Cloudflare
-Worker that only carries static assets. Comments are this repository's GitHub
-Discussions, rendered by [giscus](https://giscus.app).
+Worker with static assets. The only code that runs is a view counter for posts,
+backed by a D1 database. Comments are this repository's GitHub Discussions,
+rendered by [giscus](https://giscus.app).
 
 | Piece          | Where                                                                          |
 | -------------- | ------------------------------------------------------------------------------ |
@@ -12,7 +13,10 @@ Discussions, rendered by [giscus](https://giscus.app).
 | Site config    | `config.toml`                                                                  |
 | Comments embed | `templates/_giscus_script.html` (overrides the theme's utterances placeholder) |
 | Head hook      | `templates/apollo/head_end.html` (canonical link for republished posts)        |
+| Body hook      | `templates/apollo/body_end.html` (view counter beacon on posts)                |
 | Components     | `templates/components/` (Tera 2 components callable from post markdown)        |
+| View counter   | `worker/index.js` (`/api/views/posts/<slug>/`), `migrations/` (D1 schema)      |
+| Post manifest  | `scripts/posts-manifest.sh` (paths the view counter accepts, from the build)   |
 | Worker config  | `wrangler.jsonc`                                                               |
 | Deploy         | `.github/workflows/deploy.yml`, on every push to `main`                        |
 
@@ -54,13 +58,100 @@ line, just before any title footnote:
 
 `zola check` validates internal and external links before pushing.
 
+`zola serve` does not run the Worker, so the view counter beacon fails quietly.
+To exercise it locally, build the site and run the Worker against a local D1
+database (state lives in the gitignored `.wrangler/`):
+
+```sh
+npx wrangler d1 migrations apply DB --local   # after each new migration
+zola build -u http://localhost:8787 && sh scripts/posts-manifest.sh
+npx wrangler dev                              # http://localhost:8787
+```
+
+`DB` is the binding name from `wrangler.jsonc`; `-u` overrides `base_url` so the
+post links stay on localhost instead of pointing at the live site. The script
+writes `public/posts.txt`, without which the Worker answers every beacon with
+503. `wrangler dev` reloads on any change under `public/`, so rebuilding while
+it runs is picked up without restarting it.
+
+## View counts
+
+Every post page sends `POST /api/views/posts/<slug>/` the first time it is
+visible in a tab, so a post opened in a background tab and never shown is not
+counted. The beacon in `templates/apollo/body_end.html` sets a flag in
+`sessionStorage` before sending, so reloads, back/forward and a closed tab that
+the browser restores do not recount; a new tab does, unless it was duplicated
+from a tab that already counted or opened by `window.open`, which copy
+`sessionStorage`. A request lost in transit is not retried; a reply that says
+the view was not counted (429 or 503 below) clears the flag, so the next load
+in that tab tries again. Visitors whose browser blocks `sessionStorage` are not
+counted at all. The Worker in `worker/index.js` only accepts same-origin
+requests, ignores crawlers that render JavaScript, and checks `/posts/<slug>/`
+against the manifest of post pages described under "Deploy". Views past ten a
+minute from one address are dropped with 429, so a script cannot inflate a
+count or use up the D1 write quota from a single machine; the cap is counted
+per Cloudflare location, not globally, and when the edge does not supply the
+address it is skipped and logged. It then replies and adds one to the row
+for that post and UTC day in the D1 table `views`. Nothing about the visitor is
+stored in D1. Workers Logs (enabled in `wrangler.jsonc`) keeps an invocation
+log per request, with its URL, headers and status, for its retention period
+(three days on the Free plan, seven on Paid). A write that fails is logged,
+not retried, as is a rate limiter that cannot be reached (the view is then
+counted uncapped). A `posts.txt` the Worker cannot read is logged and answered
+with 503, so those views are lost. The log is the only sign that views are not
+being counted.
+
+The slug is whatever follows `/posts/` in the page path, so a post in a
+subsection is stored as `<section>/<slug>`.
+
+Totals per post:
+
+```sh
+npx wrangler d1 execute DB --remote \
+  --command "SELECT slug, SUM(count) AS views FROM views GROUP BY slug ORDER BY views DESC"
+```
+
+Daily history for one post:
+
+```sh
+npx wrangler d1 execute DB --remote \
+  --command "SELECT day, count FROM views WHERE slug = '<slug>' ORDER BY day"
+```
+
+The same SQL works in the Cloudflare dashboard (Storage & Databases > D1), and
+`npx wrangler d1 export DB --remote --output views.sql` dumps the whole table.
+Schema changes are new files in `migrations/`, applied by the deploy workflow
+before `wrangler deploy`. There is no rollback, and a failed deploy leaves the
+new schema live under the old Worker, so every migration must work with the
+Worker that is already deployed: add columns first, switch the Worker in the
+same or a later deploy, and drop or rename only once nothing running uses the
+old shape.
+
 ## Deploy
 
-Pushing to `main` builds the site on a GitHub-hosted runner and runs
-`wrangler deploy`. The Worker is assets-only: `wrangler.jsonc` has no `main`,
-so requests never execute code and asset requests are not billed. Zola emits
-`<page>/index.html`, matched by `html_handling = "auto-trailing-slash"`; the
-theme's `404.html` is served for unknown paths.
+Pushing to `main` builds the site on a GitHub-hosted runner, writes the view
+counter manifest with `scripts/posts-manifest.sh`, applies pending D1
+migrations and runs `wrangler deploy`.
+
+The manifest, `public/posts.txt`, is the list of post pages the Worker counts
+views for. The script takes it from the `data-views` attribute of the beacon
+`<script>` in every built page (the beacon itself reads the path from that
+attribute), so a page is listed exactly when it sends a beacon and section,
+pagination and alias paths are never on it. Post content cannot add to it:
+Markdown escapes `<` in code spans and blocks, and a raw HTML block, which
+Zola passes through, can only produce a beacon that does not name its own
+page, which fails the deploy. The script also fails it if no page sends a
+beacon or a path is not of the form `/posts/<slug>/`, the two ways the beacon
+template could drift and make views silently stop being counted.
+
+`run_worker_first` in `wrangler.jsonc` sends `/api/*` to the script and
+everything else to the asset layer, which serves hits without executing code.
+A miss on a navigation request (a stale link) gets the theme's `404.html` from
+the asset layer through `not_found_handling`; a miss on any other request (a
+scanner, a missing image) is handed to the script, which passes it straight
+back to the asset layer, so it gets the same `404.html` at the cost of one
+Worker request. Zola emits `<page>/index.html`, matched by
+`html_handling = "auto-trailing-slash"`.
 
 The custom domain is created by wrangler on the first deploy, including the
 DNS record and certificate. Nothing else may create a DNS record for
@@ -75,6 +166,7 @@ deploy on `push` to `main` only; never add `pull_request_target`.
 1. Create a Cloudflare API token for this site only (Cloudflare dashboard >
    My Profile > API Tokens > Create Token > Create Custom Token):
    - Account > **Workers Scripts: Edit**
+   - Account > **D1: Edit**
    - Account > **Account Settings: Read**
    - User > **User Details: Read**
    - User > **Memberships: Read**
@@ -85,8 +177,9 @@ deploy on `push` to `main` only; never add `pull_request_target`.
 
    Workers Scripts uploads the assets and, because `custom_domain = true` uses
    the account-level Workers domains API, also creates the custom domain, its
-   DNS record and its certificate. No DNS or SSL permission is needed. The
-   zone rights are for wrangler's pre-deploy checks: it resolves the zone for
+   DNS record and its certificate. No DNS or SSL permission is needed. D1 is
+   for applying migrations to the view counter database. The zone rights are
+   for wrangler's pre-deploy checks: it resolves the zone for
    the hostname and lists the zone's Worker routes to detect conflicts, and
    fails with `Authentication error [code: 10000]` on
    `/zones/<id>/workers/routes` without them. The read rights on the account
@@ -95,11 +188,21 @@ deploy on `push` to `main` only; never add `pull_request_target`.
    blog needs.
 2. Add repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
    (Settings > Secrets and variables > Actions).
-3. Install the [giscus GitHub app](https://github.com/apps/giscus) on this
+3. Create the view counter database once, logged in with `npx wrangler login`,
+   and put the printed id in `database_id` under `d1_databases` in
+   `wrangler.jsonc`. The deploy needs the id in the committed config and the
+   command fails if the name already exists, which is why it is not part of the
+   workflow.
+
+   ```sh
+   npx wrangler d1 create mihai-dinculescu-dev-views
+   ```
+
+4. Install the [giscus GitHub app](https://github.com/apps/giscus) on this
    repository; the app cannot be installed through the API. Discussions are
    already enabled and the **Announcements** category is used so only giscus
    and maintainers can open threads; readers reply inside them.
-4. Push to `main`, or run the **Deploy** workflow by hand.
+5. Push to `main`, or run the **Deploy** workflow by hand.
 
 ## Looking up the giscus IDs again
 

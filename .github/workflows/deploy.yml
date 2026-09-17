@@ -5,6 +5,15 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# Serialise deploys. `wrangler d1 migrations apply` is idempotent on its own
+# (it records applied files in d1_migrations and skips them), but two
+# overlapping runs would both read that table before either writes to it and
+# apply the same migration twice. Queue instead of cancel so a run is never
+# killed between applying a migration and deploying the Worker that needs it.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
 env:
   ZOLA_VERSION: "0.23.4"
 
@@ -26,8 +35,14 @@ jobs:
       - name: Build
         run: zola build
 
+      # Lists the post paths the view counter accepts and fails the deploy if
+      # the beacon template drifted; README.md ("Deploy") has the details.
+      - name: Write the view counter manifest
+        run: sh scripts/posts-manifest.sh
+
       - name: Deploy
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          preCommands: wrangler d1 migrations apply DB --remote
