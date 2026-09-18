@@ -118,6 +118,13 @@ npx wrangler d1 execute DB --remote \
   --command "SELECT day, count FROM views WHERE slug = '<slug>' ORDER BY day"
 ```
 
+Daily history for every post, newest day first:
+
+```sh
+npx wrangler d1 execute DB --remote \
+  --command "SELECT day, slug, SUM(count) AS views FROM views GROUP BY day, slug ORDER BY day DESC, views DESC"
+```
+
 The same SQL works in the Cloudflare dashboard (Storage & Databases > D1), and
 `npx wrangler d1 export DB --remote --output views.sql` dumps the whole table.
 Schema changes are new files in `migrations/`, applied by the deploy workflow
