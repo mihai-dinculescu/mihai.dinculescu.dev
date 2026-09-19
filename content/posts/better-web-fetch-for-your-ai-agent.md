@@ -1,6 +1,7 @@
 +++
 title = "A better web fetch for your AI agent, for free*"
 date = 2026-09-09
+updated = 2026-09-19
 description = "Claude's built-in web fetch bows to robots.txt and can't run JavaScript. A self-hosted Playwright MCP server behind a free Cloudflare MCP portal fixes both."
 
 [taxonomies]
@@ -11,6 +12,11 @@ comment = true
 read_time = true
 +++
 
+*Updated on 2026-09-19: [How to run your own](#how-to-run-your-own) now goes
+into more detail on keeping a page open between tool calls behind a portal:
+three settings worth knowing, and what sharing one browser means if you have
+more than one user.*
+
 ## Why this suddenly became important to me
 
 I was chilling in bed when my Garmin watch buzzed. New firmware. I don't know
@@ -19,7 +25,7 @@ know deep down that the odds are it's a boring set of changes that won't make
 my day any better. Still, an engineer like me put work into shipping it. I
 want to know what it brings.
 
-So I opened the Claude app on my phone and ask Phoebe (the name Claude goes by
+So I opened the Claude app on my phone and asked Phoebe (the name Claude goes by
 for me) what's new in that version. The reply was unhelpful. Phoebe couldn't
 fetch the Garmin forum page that holds the release notes, because the forum's
 `robots.txt` forbids it. I tried explaining that she's my personal assistant,
@@ -59,7 +65,8 @@ There's a bonus I didn't expect. Instead of screenshots, the default output is
 an accessibility snapshot: a compact text tree of what's on the page, with
 reference ids the model can act on. It's far smaller than raw HTML and it
 turns "fetch this page" into "fetch this page, then click Release notes and
-scroll".
+scroll". In the setup below, that second half took some non-obvious
+configuration to get working. I'll come back to it.
 
 ## How to run your own
 
@@ -97,8 +104,41 @@ enable/disable and a request log for free.
 the internet.** Its cloudflared daemon opens an outbound tunnel from your
 network to Cloudflare, so the upstream hostname resolves to Cloudflare and
 there is no inbound port on your router. Point the tunnel straight at the
-Playwright service. Don't route it through a shared ingress controller, for a
-reason that's coming up.
+Playwright service. Don't route it through a shared ingress controller. That
+mistake bit me, and the story is further down, under keeping it away from your
+local network.
+
+**The portal starts a new MCP session for every tool call, and Playwright MCP
+ties the browser to the session.** Out of the box, a second call in quick
+succession fails with an error that tells you to pass `--isolated`. Do that and
+the error goes away, replaced by something worse, because nothing looks broken
+any more: navigate reports the right page title, and then every attempt to read
+or click finds `about:blank`. `--isolated` gives each session its own browser
+context, which behind a portal means each call, so the page you just loaded
+sits where no later call can reach it. Don't wait for the portal to start
+reusing sessions: the newest revision of MCP has no sessions at all, and
+[the portal already prefers it](https://developers.cloudflare.com/cloudflare-one/access-controls/ai-controls/mcp-portals/#session-lifecycle).
+
+Three settings make it behave:
+
+- **`--shared-browser-context`, without `--isolated`.** Every session then gets
+  the same context. `--isolated` wins if both are set.
+- **`PLAYWRIGHT_MCP_PING_TIMEOUT_MS`, set to something generous.** Mine is an
+  hour, in milliseconds. The portal hangs up after every call, and the server's
+  heartbeat takes the unanswered ping to mean the session is dead. When the
+  last session goes, the shared browser goes with it. With the default of five
+  seconds, that happens about eight seconds after the last call: just long
+  enough for a quick test to pass. Don't set it to zero: that keeps every
+  session forever, and they add up.
+- **`--snapshot-mode=none`.** Otherwise every navigate and click answers with a
+  link to a snapshot file inside the container, which the model can't open.
+  That switches off the automatic snapshot I praised earlier, but the model can
+  still ask for one, and gets it inline.
+
+The price of sharing is one browser and one cookie jar for everyone who can
+reach the portal. That suits my household of one expensive AI subscription. If
+you're spending that fifty-user allowance on real people, give each of them
+their own instance, or they're all sharing your logins.
 
 **Playwright MCP drives a real Chromium, without its sandbox, so give the
 container as little as possible.** The official image runs headless Chromium
