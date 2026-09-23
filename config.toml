@@ -38,6 +38,9 @@ skip_prefixes = [
 skip_anchor_prefixes = [
   # posts/esp32-mqtt-publish-with-rust.md
   "https://github.com/ivmarkov/rust-esp32-std-demo",
+  # posts/my-agent-is-not-a-crawler-i-sent-it.md
+  # Heading ids are added client-side, so the static HTML has no anchors.
+  "https://blog.cloudflare.com/accountable-mixed-use-ai-crawlers/",
 ]
 
 [extra]
