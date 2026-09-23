@@ -53,6 +53,11 @@ sees it. I'll probably move some things into `~/.config/git/ignore` soon too;
 editor clutter has no business in any project's `.gitignore`, and yet there it
 is, in most of them.
 
+Of course, all of this is laid out very nicely in the [official
+documentation](https://git-scm.com/docs/gitignore), if only I'd thought to read
+it, or even to search for it. I didn't, and I'd wager that git is the tool most
+of us learned by accident.
+
 ## Using them
 
 The two new ones are plain text files that take the same patterns as
