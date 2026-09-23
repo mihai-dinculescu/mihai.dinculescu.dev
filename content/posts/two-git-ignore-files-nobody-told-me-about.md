@@ -55,8 +55,9 @@ is, in most of them.
 
 Of course, all of this is laid out very nicely in the [official
 documentation](https://git-scm.com/docs/gitignore), if only I'd thought to read
-it, or even to search for it. I didn't, and I'd wager that git is the tool most
-of us learned by accident.
+it, or even to search for it. I didn't, and I'd wager a small sum that git is
+the tool most of us learned by accident, some of them fortunate, some less so.
+Thankfully, this one was the former.
 
 ## Using them
 
