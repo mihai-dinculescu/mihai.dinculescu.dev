@@ -1,5 +1,5 @@
 +++
-title = "The two git ignore files nobody told me about"
+title = "Two git ignore files nobody told me about"
 date = 2026-09-23
 description = "Git reads ignore patterns from .gitignore, .git/info/exclude and a global excludes file. The second one never gets committed, so your scratch files and agent plans can stop dirtying the working tree without anyone else seeing them."
 
