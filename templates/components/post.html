@@ -1,0 +1,63 @@
+{#
+  Copy of the theme's components/post.html (themes/apollo, v2.0.1) with the
+  "Read more" link removed from post.list_post. The row's title is already
+  the link, and a TIL entry's description is the whole fact, so the link
+  promised more than it delivered. A site file at this path shadows the
+  theme's whole file, so every component in it is duplicated here; re-diff
+  against the theme's copy when the submodule is updated.
+#}
+{% component post.list_post(page: map) %}
+{% set post_url = page.extra?.link_to or page.permalink %}
+<li class="list-item">
+    <section>
+        <div class="post-header">
+            <time>{{ page.date | date(format="%Y-%m-%d") }}</time>
+
+            <div>
+                <h1 class="title">
+                    <a href="{{ post_url | safe }}">{{ page.title }}
+                        {% if page.extra?.link_to %}
+                            ↗
+                        {% endif %}
+                    </a>
+
+                    {% if page.draft %}
+                        <span class="draft-label">DRAFT</span>
+                    {% endif %}
+                </h1>
+
+                <div class="meta">
+                    <div class="description">
+                        {% if page.description %}
+                            {{ page.description }}
+                        {% elif page.summary %}
+                            {{ page.summary | safe }}&hellip;
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+</li>
+{% endcomponent post.list_post %}
+
+{% component post.list_posts(pages: array) %}
+<ul>
+    {%- for page in pages %}
+        {{<post.list_post page={page} />}}
+    {% endfor -%}
+</ul>
+{% endcomponent post.list_posts %}
+
+{% component post.page_header(title: string) %}
+{% if title %}
+    <div class="page-header">
+        {{ title }}
+    </div>
+{% endif %}
+{% endcomponent post.page_header %}
+
+{% component post.site_title(config: map) %}
+{{ config.title | default(value="Home") }}
+{% endcomponent post.site_title %}

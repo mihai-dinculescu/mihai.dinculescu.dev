@@ -15,6 +15,7 @@ Discussions, rendered by [giscus](https://giscus.app).
 | Comments embed | `templates/_giscus_script.html` (overrides the theme's utterances placeholder) |
 | Head hook      | `templates/apollo/head_end.html` (canonical link for republished posts)        |
 | Body hook      | `templates/apollo/body_end.html` (view counter beacon on posts and entries)    |
+| List row       | `templates/components/post.html` (theme's post components, no "Read more")     |
 | Components     | `templates/components/` (Tera 2 components callable from post markdown)        |
 | View counter   | `worker/index.js` (`/api/views/<section>/<slug>/`), `migrations/` (D1 schema)  |
 | View manifest  | `scripts/views-manifest.sh` (paths the view counter accepts, from the build)   |
@@ -253,4 +254,7 @@ Put `repository.id` in `repo_id` and the Announcements node id in
   the new submodule pointer. Check `templates/_giscus_script.html` still lines
   up with the theme's `base.html` (it looks for `page.extra.comment` and a
   `<div class="giscus">` mount point) and that the toggle script still exposes
-  `updateItemToggleTheme` and the `#darkModeStyle` stylesheet.
+  `updateItemToggleTheme` and the `#darkModeStyle` stylesheet. Diff
+  `templates/components/post.html` against the theme's copy and carry over
+  anything new; it shadows the whole file and only removes the "Read more"
+  link.
