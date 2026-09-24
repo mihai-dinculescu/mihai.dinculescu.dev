@@ -5,6 +5,9 @@ description = "Git reads ~/.config/git/ignore on top of every repository's .giti
 
 [taxonomies]
 tags = ["git"]
+
+[extra]
+comment = true
 +++
 
 Git reads a global excludes file in addition to each repository's `.gitignore`.

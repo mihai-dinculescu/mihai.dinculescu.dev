@@ -5,6 +5,9 @@ description = "EKS rejects a minimum above the current desired size, so raise th
 
 [taxonomies]
 tags = ["eks"]
+
+[extra]
+comment = true
 +++
 
 A managed node group's scaling config has three numbers:

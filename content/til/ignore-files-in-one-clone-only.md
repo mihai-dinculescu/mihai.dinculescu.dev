@@ -5,6 +5,9 @@ description = "Patterns in .git/info/exclude work like .gitignore but are never 
 
 [taxonomies]
 tags = ["git"]
+
+[extra]
+comment = true
 +++
 
 `.git/info/exclude` takes the same patterns as `.gitignore`, but it lives

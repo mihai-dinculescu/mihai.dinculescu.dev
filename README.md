@@ -79,9 +79,9 @@ it runs is picked up without restarting it.
 ### TIL entries
 
 `content/til/` holds "today I learned" entries: one problem and what solved
-it, any length. They take the same front matter as posts minus the `[extra]`
-keys, and tags are the taxonomy shared with posts, so a tag page and its feed
-list articles and entries together. The index at `/til` (`templates/til.html`)
+it, any length. They take the same front matter as posts, with a comment
+thread and without `read_time`, and tags are the taxonomy shared with posts,
+so a tag page and its feed list articles and entries together. The index at `/til` (`templates/til.html`)
 lists the tags that have entries, with entry counts, then the entries newest
 first in the theme's post list rows. Entries are not listed on the homepage,
 but the site feed and the search index include them, `/til/atom.xml` is a
