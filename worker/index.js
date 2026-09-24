@@ -1,35 +1,37 @@
-// View counter for posts: POST /api/views/posts/<slug>/ adds one view to the
-// row for today's UTC date in the D1 `views` table and answers 204. README.md
-// describes what is and is not counted ("View counts"), how the list of
-// accepted paths is produced and how requests reach this script ("Deploy").
+// View counter for posts and TIL entries: POST /api/views<page path> adds one
+// view to the row for that page and today's UTC date in the D1 `views` table
+// and answers 204. README.md describes what is and is not counted ("View
+// counts"), how the list of accepted paths is produced and how requests reach
+// this script ("Deploy").
 
-// Anything shaped like a page path under /posts/; whether the post exists is
-// decided against the manifest below, so the slug alphabet is not repeated
-// here. `slug` is the path between `/posts/` and the trailing slash, so a post
-// in a subsection is captured as `<section>/<slug>`, the form stored in D1.
+// Anything shaped like a page path in a section, `/<section>/<slug>/` or
+// deeper; whether the page is counted is decided against the manifest below,
+// so neither the section names nor the slug alphabet are repeated here.
+// `path` is the page path as Zola builds it, slashes included: the same string
+// as the beacon's `data-views` attribute, the manifest line and the D1 row.
 // Dot segments never reach this regex: `new URL` has already resolved them.
-const POST_PATH = /^\/api\/views\/posts\/(?<slug>[^/]+(?:\/[^/]+)*)\/$/;
+const PAGE_PATH = /^\/api\/views(?<path>\/[^/]+(?:\/[^/]+)+\/)$/;
 
-// Post page paths from /posts.txt, fetched once per isolate. The promise is
+// Counted page paths from /views.txt, fetched once per isolate. The promise is
 // cached, not its result, so a burst of beacons on a cold isolate shares one
 // fetch. A deploy replaces every isolate, so there is nothing to invalidate;
 // `wrangler dev` reloads on any change under public/, which does the same
 // locally. A manifest that cannot be read is dropped from the cache, so the
 // next beacon retries, and resolves to null, which the handler answers with
-// 503 rather than rejecting the path as not a post.
-let posts;
-function publishedPosts(env, url) {
-  posts ??= env.ASSETS.fetch(new URL("/posts.txt", url))
+// 503 rather than rejecting the path as not counted.
+let pages;
+function countedPages(env, url) {
+  pages ??= env.ASSETS.fetch(new URL("/views.txt", url))
     .then(async (manifest) => {
       if (!manifest.ok) throw new Error(`status ${manifest.status}`);
       return new Set((await manifest.text()).split(/\r?\n/));
     })
     .catch((err) => {
-      posts = undefined;
-      console.error("views not counted, /posts.txt not readable:", err);
+      pages = undefined;
+      console.error("views not counted, /views.txt not readable:", err);
       return null;
     });
-  return posts;
+  return pages;
 }
 
 // Crawlers that render JavaScript and would otherwise pass the same-origin check
@@ -54,7 +56,7 @@ export default {
     if (!url.pathname.startsWith("/api/")) {
       return env.ASSETS.fetch(request);
     }
-    const match = url.pathname.match(POST_PATH);
+    const match = url.pathname.match(PAGE_PATH);
     if (!match) {
       return new Response(null, { status: 404 });
     }
@@ -76,21 +78,21 @@ export default {
       return new Response(null, { status: 204 });
     }
 
-    // Only count published posts, so that Zola's routing (section and
+    // Only count pages in the manifest, so that Zola's routing (section and
     // pagination pages, percent-encoded, re-cased or `index.html/` aliases) is
     // not repeated here. Checked before the rate limit so that a path that is
-    // not a post costs no limiter token. Without the manifest nothing can be
-    // counted; 503 keeps that apart from the 404 for a path that is not a post.
-    const { slug } = match.groups;
-    const published = await publishedPosts(env, url);
-    if (!published) {
+    // not counted costs no limiter token. Without the manifest nothing can be
+    // counted; 503 keeps that apart from the 404 for a path that is not a page.
+    const { path } = match.groups;
+    const counted = await countedPages(env, url);
+    if (!counted) {
       return new Response(null, { status: 503 });
     }
-    if (!published.has(`/posts/${slug}/`)) {
+    if (!counted.has(path)) {
       return new Response(null, { status: 404 });
     }
 
-    // Per-IP cap. A reader opens a handful of posts a minute; a script that
+    // Per-IP cap. A reader opens a handful of pages a minute; a script that
     // forges Origin does not stop at that. CF-Connecting-IP is set by the edge
     // and cannot be spoofed by the client. Shared addresses (offices, CGNAT)
     // can trip this, which loses a few views rather than a day's worth. When
@@ -105,7 +107,7 @@ export default {
       try {
         ({ success } = await env.VIEWS_LIMIT.limit({ key: address }));
       } catch (err) {
-        console.error(`view of ${slug} not rate limited:`, err);
+        console.error(`view of ${path} not rate limited:`, err);
       }
     } else if (!warnedNoAddress) {
       warnedNoAddress = true;
@@ -116,15 +118,16 @@ export default {
     }
 
     // Nothing reads the reply, so send it before the write lands. `day` and
-    // `count` come from the column defaults in migrations/0001_views.sql.
+    // `count` come from the column defaults in migrations/0001_views.sql;
+    // `path` is the key column's name since migrations/0002_views_by_path.sql.
     ctx.waitUntil(
       env.DB.prepare(
-        "INSERT INTO views (slug) VALUES (?1) " +
-          "ON CONFLICT (slug, day) DO UPDATE SET count = count + 1",
+        "INSERT INTO views (path) VALUES (?1) " +
+          "ON CONFLICT (path, day) DO UPDATE SET count = count + 1",
       )
-        .bind(slug)
+        .bind(path)
         .run()
-        .catch((err) => console.error(`view of ${slug} not counted:`, err)),
+        .catch((err) => console.error(`view of ${path} not counted:`, err)),
     );
     return new Response(null, { status: 204 });
   },

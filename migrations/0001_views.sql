@@ -1,5 +1,6 @@
--- One row per post per UTC day. Totals are SUM(count) GROUP BY slug.
--- The Worker inserts only `slug`; `day` and `count` take their defaults.
+-- One row per page per UTC day. Totals are SUM(count) GROUP BY the key.
+-- The Worker inserts only the key; `day` and `count` take their defaults.
+-- `slug` is renamed to `path` in 0002_views_by_path.sql.
 CREATE TABLE views (
   slug  TEXT    NOT NULL,
   day   TEXT    NOT NULL DEFAULT (date('now')), -- YYYY-MM-DD, UTC

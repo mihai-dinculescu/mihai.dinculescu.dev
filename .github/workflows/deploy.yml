@@ -35,10 +35,10 @@ jobs:
       - name: Build
         run: zola build
 
-      # Lists the post paths the view counter accepts and fails the deploy if
+      # Lists the page paths the view counter accepts and fails the deploy if
       # the beacon template drifted; README.md ("Deploy") has the details.
       - name: Write the view counter manifest
-        run: sh scripts/posts-manifest.sh
+        run: sh scripts/views-manifest.sh
 
       - name: Deploy
         uses: cloudflare/wrangler-action@v4
