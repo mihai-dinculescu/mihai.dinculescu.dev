@@ -1,0 +1,34 @@
+{#
+  Index of content/til/: the tags that have entries, with their entry counts,
+  then every entry newest first, in the theme's own post list rows. Tags are
+  the taxonomy shared with posts, so each tag's pages are narrowed to this
+  section by their first path component. The `tags` class is the theme's,
+  which prefixes each link with "#" as it does in a post's meta line.
+#}
+{% extends "base.html" %}
+
+{% block main_content %}
+    {{<post.page_header title={section.title} />}}
+
+    {% if section.content %}
+        <div class="section-content">
+            {{ section.content | safe }}
+        </div>
+    {% endif %}
+
+    {%- set tags = get_taxonomy(kind="tags") -%}
+    {%- set tagged = [term for term in tags.items if [page for page in term.pages if page.components[0] == "til"]] -%}
+    {%- if tagged %}
+        <p class="tags">
+            Browse by tag:
+            {%- for term in tagged | sort(attribute="name") %}
+                {%- set entries = [page for page in term.pages if page.components[0] == "til"] %}
+                <a href="{{ term.permalink | safe }}">{{ term.name }}</a> {{ entries | length }}{% if not loop.last %} &middot;{% endif %}
+            {%- endfor %}
+        </p>
+    {% endif -%}
+
+    <main class="post-list">
+        {{<post.list_posts pages={section.pages} />}}
+    </main>
+{% endblock main_content %}

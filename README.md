@@ -8,7 +8,8 @@ rendered by [giscus](https://giscus.app).
 
 | Piece          | Where                                                                          |
 | -------------- | ------------------------------------------------------------------------------ |
-| Content        | `content/` (`posts/` for articles; `_index.md` is the homepage)                |
+| Content        | `content/` (`posts/`, `til/` for TIL entries, `_index.md` the homepage)        |
+| TIL index      | `templates/til.html` (tags with entry counts, then entries newest first)       |
 | Theme          | `themes/apollo` git submodule, pinned to the commit recorded in this repo      |
 | Site config    | `config.toml`                                                                  |
 | Comments embed | `templates/_giscus_script.html` (overrides the theme's utterances placeholder) |
@@ -73,6 +74,17 @@ post links stay on localhost instead of pointing at the live site. The script
 writes `public/posts.txt`, without which the Worker answers every beacon with
 503. `wrangler dev` reloads on any change under `public/`, so rebuilding while
 it runs is picked up without restarting it.
+
+### TIL entries
+
+`content/til/` holds "today I learned" entries: one problem and what solved
+it, any length. They take the same front matter as posts minus the `[extra]`
+keys, and tags are the taxonomy shared with posts, so a tag page and its feed
+list articles and entries together. The index at `/til` (`templates/til.html`)
+lists the tags that have entries, with entry counts, then the entries newest
+first in the theme's post list rows. Entries are not listed on the homepage
+and send no view beacon, but the site feed and the search index include them,
+and `/til/atom.xml` is a feed of entries only.
 
 ## View counts
 

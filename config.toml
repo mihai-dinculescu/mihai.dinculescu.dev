@@ -55,8 +55,9 @@ repo_view = true
 repo_url = "https://github.com/mihai-dinculescu/mihai.dinculescu.dev/tree/main/content/"
 menu = [
   { name = "/posts", url = "/posts", weight = 1 },
-  { name = "/tags", url = "/tags", weight = 2 },
-  { name = "/feed", url = "/atom.xml", weight = 3 },
+  { name = "/til", url = "/til", weight = 2 },
+  { name = "/tags", url = "/tags", weight = 3 },
+  { name = "/feed", url = "/atom.xml", weight = 4 },
 ]
 socials = [
   { name = "github", url = "https://github.com/mihai-dinculescu", icon = "github" },
