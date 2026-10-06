@@ -34,6 +34,10 @@ error_on_missing_language = true
 skip_prefixes = [
   # posts/esp32-mqtt-publish-with-rust.md
   "https://medium.com/iotics/esp32-mqtt-publish-with-rust-678d1068ee2",
+  # posts/tapo-speaks-tpap.md
+  # The TP-Link forum answers 403 to anything that isn't a browser, too.
+  "https://community.tp-link.com/us/smart-home/forum/topic/620314",
+  "https://community.tp-link.com/en/smart-home/forum/topic/852002",
 ]
 skip_anchor_prefixes = [
   # posts/esp32-mqtt-publish-with-rust.md
