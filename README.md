@@ -19,6 +19,7 @@ Discussions, rendered by [giscus](https://giscus.app).
 | Components     | `templates/components/` (Tera 2 components callable from post markdown)        |
 | View counter   | `worker/index.js` (`/api/views/<section>/<slug>/`), `migrations/` (D1 schema)  |
 | View manifest  | `scripts/views-manifest.sh` (paths the view counter accepts, from the build)   |
+| Views by page  | `scripts/views.sh` (a UTC day or all time, live D1), `scripts/views-table.mjs` |
 | Worker config  | `wrangler.jsonc`                                                               |
 | Asset headers  | `static/_headers` (noindex header on the feeds, applied by the asset layer)    |
 | Deploy         | `.github/workflows/deploy.yml`, on every push to `main`                        |
@@ -121,11 +122,13 @@ for a post, `/til/<slug>/` for an entry, `/posts/<sub>/<slug>/` for a post in
 a subsection. It is the same string as the beacon's `data-views` attribute and
 the manifest line, so nothing is derived from anything else.
 
-Totals per page:
+Views per page for today, a given UTC day or all time, with the total
+(`scripts/views.sh` retries the query, which fails now and then):
 
 ```sh
-npx wrangler d1 execute DB --remote \
-  --command "SELECT path, SUM(count) AS views FROM views GROUP BY path ORDER BY views DESC"
+sh scripts/views.sh              # today so far
+sh scripts/views.sh 2026-09-24   # a past day
+sh scripts/views.sh all          # every day
 ```
 
 Daily history for one page:
@@ -142,7 +145,8 @@ npx wrangler d1 execute DB --remote \
   --command "SELECT day, path, SUM(count) AS views FROM views GROUP BY day, path ORDER BY day DESC, views DESC"
 ```
 
-The same SQL works in the Cloudflare dashboard (Storage & Databases > D1), and
+These queries, and the one in `scripts/views.sh`, also work in the Cloudflare
+dashboard (Storage & Databases > D1), and
 `npx wrangler d1 export DB --remote --output views.sql` dumps the whole table.
 Schema changes are new files in `migrations/`, applied by the deploy workflow
 just before `wrangler deploy`. There is no rollback. Between the two steps the
