@@ -22,6 +22,7 @@ Discussions, rendered by [giscus](https://giscus.app).
 | Views by page  | `scripts/views.sh` (a UTC day or all time, live D1), `scripts/views-table.mjs` |
 | Worker config  | `wrangler.jsonc`                                                               |
 | Asset headers  | `static/_headers` (noindex header on the feeds, applied by the asset layer)    |
+| Redirects      | `static/_redirects` (page 1 of a section to the section, by the asset layer)   |
 | Deploy         | `.github/workflows/deploy.yml`, on every push to `main`                        |
 
 ## Writing
@@ -191,6 +192,19 @@ header rules: it adds `X-Robots-Tag: noindex` to every feed (site, section and
 tag), so Search Console reports them as excluded by noindex rather than as
 "Crawled - currently not indexed", where they look like a problem. `wrangler
 dev` applies it too, so `curl -I` against the local server shows the header.
+
+`static/_redirects` is the asset layer's redirect rules, evaluated before any
+asset is looked up. Zola gives page 1 of a paginated section no content of its
+own, only a stub at `<section>/page/1/` that redirects client-side back to the
+section, which the asset layer would serve as a 200 and Search Console would
+keep as "Discovered - currently not indexed". The rules turn each stub into a
+301. Each is a literal rule, not a splat, because a splat would also 301 any
+path with that suffix, a post included; and each is listed with and without
+the trailing slash, because a rule matches the path exactly and the slash-less
+form would otherwise reach the 301 only through the asset layer's 307 to the
+slash form, a chain whose first hop Google treats as temporary. A section that
+enables `paginate_by` needs its stub added by hand; nothing fails at build
+time if it is missed. `wrangler dev` applies the redirects too.
 
 The custom domain is created by wrangler on the first deploy, including the
 DNS record and certificate. Nothing else may create a DNS record for

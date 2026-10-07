@@ -1,0 +1,5 @@
+# Redirects served by the asset layer; see README.md ("Deploy").
+/page/1         /         301
+/page/1/        /         301
+/posts/page/1   /posts/   301
+/posts/page/1/  /posts/   301
