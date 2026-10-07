@@ -20,6 +20,7 @@ Discussions, rendered by [giscus](https://giscus.app).
 | View counter   | `worker/index.js` (`/api/views/<section>/<slug>/`), `migrations/` (D1 schema)  |
 | View manifest  | `scripts/views-manifest.sh` (paths the view counter accepts, from the build)   |
 | Worker config  | `wrangler.jsonc`                                                               |
+| Asset headers  | `static/_headers` (noindex header on the feeds, applied by the asset layer)    |
 | Deploy         | `.github/workflows/deploy.yml`, on every push to `main`                        |
 
 ## Writing
@@ -180,6 +181,12 @@ scanner, a missing image) is handed to the script, which passes it straight
 back to the asset layer, so it gets the same `404.html` at the cost of one
 Worker request. Zola emits `<page>/index.html`, matched by
 `html_handling = "auto-trailing-slash"`.
+
+`static/_headers`, copied into `public/` by the build, is the asset layer's
+header rules: it adds `X-Robots-Tag: noindex` to every feed (site, section and
+tag), so Search Console reports them as excluded by noindex rather than as
+"Crawled - currently not indexed", where they look like a problem. `wrangler
+dev` applies it too, so `curl -I` against the local server shows the header.
 
 The custom domain is created by wrangler on the first deploy, including the
 DNS record and certificate. Nothing else may create a DNS record for

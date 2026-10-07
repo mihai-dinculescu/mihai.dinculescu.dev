@@ -1,0 +1,8 @@
+# Response headers added by the asset layer; see README.md ("Deploy").
+# Feeds are for readers, not search results. Without noindex, Search Console
+# lists every feed as "Crawled - currently not indexed", which is harmless but
+# hides real problems in the same report. `*` matches any run of characters,
+# so one rule covers the site feed, every section feed and every tag feed,
+# whichever sections or taxonomies enable feeds.
+/*atom.xml
+  X-Robots-Tag: noindex
